@@ -1,0 +1,4 @@
+metadata*
+# /seq_global_analysis/*
+
+# echo metadata* >> .gitignore $ git rm --cached metadata* rm 'metadata*' $ git commit -m "Start ignoring metadata*" 
