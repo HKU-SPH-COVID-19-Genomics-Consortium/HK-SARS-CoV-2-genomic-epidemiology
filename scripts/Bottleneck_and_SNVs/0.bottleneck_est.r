@@ -14,7 +14,6 @@ library(scales)
 mc.cores=48
 
 ##########################################################################
-########################################################## log_likelihood_function <- matrix( 0, Nb_max)
 
 generate_log_likelihood_function_approx <- function(donor_freqs_observed, recipient_total_reads, recipient_var_reads_observed, Nb_min, Nb_max, var_calling_threshold, confidence_level, n_variants) {
   num_NB_values <- Nb_max - Nb_min + 1
