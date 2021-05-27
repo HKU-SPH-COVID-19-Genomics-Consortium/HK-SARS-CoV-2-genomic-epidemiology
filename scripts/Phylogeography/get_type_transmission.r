@@ -13,7 +13,7 @@ df_primary_type <- lapply(df_rst$seq_name, function(x){
 	case_id <- strsplit(x, "/", fixed = T)[[1]][1]
 	case_id <- strsplit(case_id, "_", fixed = T)[[1]][2]
 	pri_type <- data_cluster$value[data_cluster$case.id == case_id][1]
-	if(grepl("_sec_", pri_type) | grepl("_tert_", pri_type)){
+	if(grepl("_sec_", pri_type) | grepl("_tert_", pri_type) | grepl("_quad_", pri_type)){
 		pri_type <- strsplit(pri_type, "_")[[1]][3]
 	} else{
 		pri_type <- strsplit(pri_type, "_")[[1]][2]
@@ -22,17 +22,17 @@ df_primary_type <- lapply(df_rst$seq_name, function(x){
 })
 df_primary_type <- bind_rows(df_primary_type)
 
-sort(table(df_primary_type$type))
-df_primary_type$type[df_primary_type$type %in% c("friends", "meal", "dating", "MK", "GreenRiver", "BunKeeCongee", "Bldg", "Windsor", "mahjong", "TuenMun", "VictoriaHarbour", "gathering", "hotel", "tutorial", "TST", "table", "Sunfat", "restaurant", "luckydragon", "Delux", "Dating", "boattrip", "boardinghouse")] <- "Social"
-df_primary_type$type[df_primary_type$type %in% c("roommate", "fam")] <- "Family/Roommate"
+sort(table(df_primary_type$type)) 
+df_primary_type$type[df_primary_type$type %in% c("friends", "meal", "dating", "MK", "GreenRiver", "BunKeeCongee", "Bldg", "Windsor", "mahjong", "TuenMun", "VictoriaHarbour", "gathering", "hotel", "tutorial", "TST", "table", "Sunfat", "restaurant", "luckydragon", "Delux", "Dating", "boattrip", "boardinghouse", "港九小輪", "royal garden", "China Secret", "singing", "seaview resort", "Gateway", "danceclub")] <- "Social"
+df_primary_type$type[df_primary_type$type %in% c("roommate", "fam", "麗晶Block6", "Block 8 Kwai Shing West", "Holly Mansion", "星月居")] <- "Family/Roommate"
 df_primary_type$type[df_primary_type$type %in% c("maid quarter", "work", "TMH", "taxi", "school")] <- "Work"
 df_primary_type$type[df_primary_type$type %in% c("RCHE", "RCHD")] <- "RCHE/RCHD"
-df_primary_type$type[df_primary_type$type %in% c("GPconsultation")] <- "Unknown"
+df_primary_type$type[df_primary_type$type %in% c("GPconsultation", "CHP")] <- "Unknown"
 df_primary_type$type[is.na(df_primary_type$type)] <- "Unknown"
 
 df_primary_type$type <- str_to_title(df_primary_type$type)
 sort(table(df_primary_type$type))
 
-# data_cluster$value[grep("GPconsultation", data_cluster$value)]
+# data_cluster$value[grep("CHP", data_cluster$value)]
 df_out <- left_join(df_rst, df_primary_type, "seq_name") %>% unique()
 write_csv(df_out, "../../results/Phylogeography/transmission_type.csv")
