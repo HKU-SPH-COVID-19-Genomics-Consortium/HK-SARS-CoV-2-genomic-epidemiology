@@ -361,22 +361,6 @@ for(day in 1){
 }
 
 df_bottleneck_all <- left_join(df_bottleneck_all, df_pair %>% dplyr::select(pair, date_diff) %>% unique())
-write_csv(df_bottleneck_all, "../results/bottleneck_1day.csv")
+write_csv(df_bottleneck_all, "../../results/Bottleneck_and_SNVs/bottleneck_1day.csv")
 
-for(day in 1){
-  df <- df_bottleneck_all %>% filter(var_calling_threshold==0.03)
-  df$pair <- as.character(df$pair)
-  df$Pair <- paste0(df$Donor, " to ", df$Recipient, " (", gsub("Cluster_", "", df$pair), ")")
-  df <- left_join(df, df_pair)
-  df %>% ggplot(aes(x = Pair, y = bottleneck_size, color = factor(date_diff)))+
-      geom_point()+
-      geom_errorbar(aes(ymin=CI_index_lower, ymax=CI_index_upper))+
-      ylim(0,210)+
-      scale_x_discrete(guide = guide_axis(n.dodge = 4))+
-      # scale_y_log10(breaks = trans_breaks("log10", function(x) 10^x),
-              # labels = trans_format("log10", math_format(10^.x)))+
-      scale_color_uchicago(name = "Difference\nbetween onset date")+
-      ylab("Bottlenect size")
-  ggsave(paste0("../results/bottleneck_", day, "day", ".pdf"), width = 10, height = 6)
-}
 
