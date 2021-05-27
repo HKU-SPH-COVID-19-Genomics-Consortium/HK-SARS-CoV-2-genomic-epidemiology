@@ -2,7 +2,7 @@ library(tidyverse)
 library(readxl)
 
 cases_3 <- readLines("../../data/Phylogeography/clade3_headers.txt")
-cases_4 <- readLines("../../data/Phylogeography/clade3_headers.txt")
+cases_4 <- readLines("../../data/Phylogeography/clade4_headers.txt")
 df_rst <- tibble(bind_rows(tibble(seq_name = cases_3, wave = 3), tibble(seq_name = cases_4, wave = 4)))
 
 df_metadata <- read_excel("../../data/metadata_2021-04-30.xlsx", col_types = "text")
