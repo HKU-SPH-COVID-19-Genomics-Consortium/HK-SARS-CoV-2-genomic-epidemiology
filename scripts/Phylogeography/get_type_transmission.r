@@ -23,10 +23,15 @@ df_primary_type <- lapply(df_rst$seq_name, function(x){
 df_primary_type <- bind_rows(df_primary_type)
 
 sort(table(df_primary_type$type)) 
+## social
 df_primary_type$type[df_primary_type$type %in% c("friends", "meal", "dating", "MK", "GreenRiver", "BunKeeCongee", "Bldg", "Windsor", "mahjong", "TuenMun", "VictoriaHarbour", "gathering", "hotel", "tutorial", "TST", "table", "Sunfat", "restaurant", "luckydragon", "Delux", "Dating", "boattrip", "boardinghouse", "港九小輪", "royal garden", "China Secret", "singing", "seaview resort", "Gateway", "danceclub")] <- "Social"
+## Family/Roommate
 df_primary_type$type[df_primary_type$type %in% c("roommate", "fam", "麗晶Block6", "Block 8 Kwai Shing West", "Holly Mansion", "星月居")] <- "Family/Roommate"
+## Work
 df_primary_type$type[df_primary_type$type %in% c("maid quarter", "work", "TMH", "taxi", "school")] <- "Work"
+## RCHE/RCHD
 df_primary_type$type[df_primary_type$type %in% c("RCHE", "RCHD")] <- "RCHE/RCHD"
+## Unknown
 df_primary_type$type[df_primary_type$type %in% c("GPconsultation", "CHP")] <- "Unknown"
 df_primary_type$type[is.na(df_primary_type$type)] <- "Unknown"
 
