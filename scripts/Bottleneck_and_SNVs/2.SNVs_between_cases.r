@@ -88,16 +88,15 @@ df_pair_plot <- bind_rows(df_pair_plot)
 df_pair_plot <- left_join(df_pair_day1, df_pair_plot)
 df_pair_plot$pair_sim <- gsub("Cluster_", "", df_pair_plot$pair)
 
-colors <- c("Shared major" = "#ca0020", "Shared minor" = "#f4a582", "Unique minor" = "#92c5de", "Unique major" = "#0571b0")
+colors <- c("Shared major" = "#b2182b", "Shared minor" = "#f4a582", "Unique minor" = "#92c5de", "Unique major" = "#2166ac")
 (p1 <- df_pair_plot %>% pivot_longer(contains("Shared") | contains("Unique")) %>% mutate(name = gsub(" SNVs", "", name)) %>% ggplot(aes(x = pair_sim, y = value))+
-    geom_col(aes(fill = name), position = "fill") +
+    geom_col(aes(fill = name), position = "fill", width = 0.618) +
     # scale_fill_uchicago(name = "Type")+
     scale_fill_manual(name = "SNV type", values = colors)+
     xlab("Transmission pair")+
     ylab("Proportion")+
     scale_x_discrete(guide = guide_axis(n.dodge = 2))+
     theme_classic())
-ggsave("../results/common_mutations_transmission_pair.pdf", plot = p1, width = 10, height = 6)
 
 ## Alle frequency between donor and recipient
 df_pair_day1_full <- read_csv("../results/bottleneck_1day.csv")
@@ -112,66 +111,14 @@ colors <- c("#ffffcc", "#c7e9b4", "#7fcdbb", "#41b6c4", "#1d91c0", "#0c2c84")
     geom_point(size = 3, shape = 21, alpha = 0.9)+
     ylim(0,220)+
     scale_x_discrete(guide = guide_axis(n.dodge = 2))+
-    scale_fill_manual(name = "Difference (days)\nbetween onset date", values = colors)+
+    scale_fill_manual(name = "Lag (days)", values = colors)+
     xlab("Transmission pair")+
     ylab("Bottlenect size")+
     theme_classic())
-ggsave(paste0("../results/bottleneck_diff_date.pdf"), plot = p2, width = 10, height = 6)
 
-p3 <- ggarrange(p1, p2, ncol = 1)
+(p3 <- ggarrange(p1, p2, ncol = 1, align = "v"))
 ggsave(paste0("../results/transmission_pair_mut_bottleneck.pdf"), plot = p3, width = 8, height = 6)
 
-df_pair_af <- lapply(seq_len(nrow(df_pair_day1_full)), function(i){
-    df_tmp <- df_pair_day1_full[i,]
-    df_tmp_d <- data %>% filter(case_id == df_tmp$Donor) %>% select(mutation, case_id, Alle_freq)
-    df_tmp_r <- data %>% filter(case_id == df_tmp$Recipient) %>% select(mutation, case_id, Alle_freq)
-    df_out <- full_join(df_tmp_d, df_tmp_r, "mutation")
-    df_out$pair <- df_tmp$Pair
-    df_out$date_diff <- df_pair_day1$date_diff[df_pair_day1$pair == df_tmp$pair]
-    return(df_out)
-})
-df_pair_af <- bind_rows(df_pair_af)
-df_pair_af %>% ggplot(aes(x = Alle_freq.x, y = Alle_freq.y))+
-    geom_point(aes(color = factor(date_diff)))+
-    # geom_smooth(aes(group = pair, color = factor(date_diff)), method = "lm", alpha = 0.3, size = 1)+
-    scale_color_viridis_d(name = "Difference\nbetween onset date")+
-    xlab("Mutation frequency in Donor")+
-    ylab("Mutation frequency in Recipient")+
-    theme_classic()+
-    xlim(0.6,1)+
-    ylim(0.6,1)+
-    NULL
-ggsave("../results/alle_freq_donor_recipient.pdf", width = 8, height = 8)
-df_pair_af %>% ggplot(aes(x = Alle_freq.x, y = Alle_freq.y))+
-    geom_point(aes(color = factor(date_diff)))+
-    geom_smooth(aes(group = pair, color = factor(date_diff)), method = "lm", alpha = 0.3, size = 0.5)+
-    scale_color_viridis_d(name = "Difference (days)\nbetween onset date")+
-    scale_y_continuous(limits = c(0, 1))+
-    xlab("Mutation frequency in Donor")+
-    ylab("Mutation frequency in Recipient")+
-    theme_classic()+
-    xlim(0.6,1)+
-    ylim(0.6,1)+
-    NULL
-ggsave("../results/alle_freq_donor_recipient_smooth.pdf", width = 8, height = 8)
-
-df_pair_af %>% filter(!is.na(Alle_freq.x) & !is.na(Alle_freq.y)) %>% group_by(pair) %>% summarize(n = n())
-df_pair_af %>% filter(!is.na(Alle_freq.x) & !is.na(Alle_freq.y)) %>% group_by(pair) %>% summarize(n = n(), sum(Alle_freq.x>0.9)/n, sum(Alle_freq.y>0.9)/n)
-
-df_pair_af$pair_sim <- gsub(".+\\(", "", df_pair_af$pair)
-df_pair_af$pair_sim <- gsub("\\)", "", df_pair_af$pair_sim)
-
-df_pair_af %>% filter(!is.na(Alle_freq.x) & !is.na(Alle_freq.y)) %>% group_by(pair_sim, date_diff) %>% summarize(n = n()) %>%
-    ggplot(aes(x = factor(date_diff), y = n))+
-    geom_point()+
-    geom_text_repel(aes(x = date_diff, y = n, label = pair_sim))+
-    scale_y_continuous(n.breaks = 10)+
-    xlab("Difference bettween onset dates")+
-    ylab("Number of shared mutations")+
-    theme_classic()
-ggsave("../results/num_of_shared_mut_transmission_pair.pdf", width = 8, height = 8)
-
-write_csv(df_pair_af, "../results/transmission_pair_shared_mutations.csv")
 
 # Jaccard distance of all sample pairs
 data <- data_ori[data_ori$Sample %in% c(sample_should_have, data_duplicated_samples_keep$Sample), ]
@@ -318,32 +265,27 @@ df_jd_all$meta_minor_cluster_same_patient_sim <- as.character(df_jd_all$meta_min
 df_jd_all$meta_minor_cluster_same_patient_sim[grepl("^Same cluster", df_jd_all$meta_minor_cluster_same_patient_sim)] <- "Same cluster"
 df_jd_all$meta_minor_cluster_same_patient_sim <- factor(df_jd_all$meta_minor_cluster_same_patient_sim, levels = c("Not in same cluster", "Same cluster", "Identified transmission pairs", "Same patient"))
 
-df_jd_all %>% group_by(meta_minor_cluster_same_patient_sim) %>% summarize(mean = mean(jd_all), n = n())
-tmp <- identify_sig(df_jd_all, "meta_minor_cluster_same_patient_sim", "jd_all")
-ggplot(df_jd_all, aes(x = meta_minor_cluster_same_patient_sim, y = jd_all))+
-    geom_boxplot() + 
-    geom_signif(comparisons = tmp, map_signif_level = TRUE, textsize = 6, step_increase = 0.1)+
-    # scale_x_discrete(guide = guide_axis(n.dodge = 2))+
-    ylab("Jaccard distance of observed SNVs") + xlab("Sample pairs")+
-    theme_classic()
-ggsave("../results/jaccard_distance_meta_minor_cluster_same_patient_all.pdf", width = 6, height = 6)
-
 df_jd_all %>% group_by(meta_minor_cluster_same_patient_sim) %>% summarise(mean(jd_major, na.rm = T))
-tmp <- identify_sig(df_jd_all, "meta_minor_cluster_same_patient_sim", "jd_major")
-ggplot(df_jd_all, aes(x = meta_minor_cluster_same_patient_sim, y = jd_major))+
-    geom_boxplot() + 
-    geom_signif(comparisons = tmp, map_signif_level = TRUE, textsize = 6, step_increase = 0.1)+
-    # scale_x_discrete(guide = guide_axis(n.dodge = 2))+
+tmp1 <- identify_sig(df_jd_all, "meta_minor_cluster_same_patient_sim", "jd_major")
+p4_1 <- ggplot(df_jd_all, aes(x = meta_minor_cluster_same_patient_sim, y = jd_major))+
+    geom_boxplot(outlier.size = 0.8) + 
+    geom_signif(comparisons = tmp1, map_signif_level = TRUE, textsize = 6, step_increase = 0.1)+
+    scale_x_discrete(guide = guide_axis(n.dodge = 2))+
     ylab("Jaccard distance of major SNVs") + xlab("Sample pairs")+
     theme_classic()
-ggsave("../results/jaccard_distance_meta_minor_cluster_same_patient_major.pdf", width = 6, height = 6)
 
 df_jd_all %>% group_by(meta_minor_cluster_same_patient_sim) %>% summarise(mean(jd_minor, na.rm = T))
-tmp <- identify_sig(df_jd_all, "meta_minor_cluster_same_patient_sim", "jd_minor")
-ggplot(df_jd_all, aes(x = meta_minor_cluster_same_patient_sim, y = jd_minor))+
-    geom_boxplot() + 
-    geom_signif(comparisons = tmp, map_signif_level = TRUE, textsize = 6, step_increase = 0.1)+
-    # scale_x_discrete(guide = guide_axis(n.dodge = 2))+
+tmp2 <- identify_sig(df_jd_all, "meta_minor_cluster_same_patient_sim", "jd_minor")
+p4_2 <- ggplot(df_jd_all, aes(x = meta_minor_cluster_same_patient_sim, y = jd_minor))+
+    geom_boxplot(outlier.size = 0.8) + 
+    geom_signif(comparisons = 2, map_signif_level = TRUE, textsize = 6, step_increase = 0.1)+
+    scale_x_discrete(guide = guide_axis(n.dodge = 2))+
     ylab("Jaccard distance of minor SNVs") + xlab("Sample pairs")+
     theme_classic()
-ggsave("../results/jaccard_distance_meta_minor_cluster_same_patient_minor.pdf", width = 6, height = 6)
+
+p4 <- ggarrange(p4_1, p4_2, nrow = 1, align = "hv")
+p_out <- ggarrange(p3, p4, 
+    heights = c(0.55, 0.45),
+    labels = c("A", "B"),
+    ncol = 1)
+ggsave("../results/main_figure_bottleneck_snvs.pdf", width = 12/1.414, height = 12, plot = p_out)
