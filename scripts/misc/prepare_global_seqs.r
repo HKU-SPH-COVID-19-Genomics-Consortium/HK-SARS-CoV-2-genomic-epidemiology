@@ -57,10 +57,9 @@ seq_global_all_GISIAD_masked_rmdup <- seq_global_all_GISIAD_masked[!duplicated(g
 writeXStringSet(seq_global_all_GISIAD_masked, "../../data/seq_global_analysis//seq_global_all.fasta")
 writeXStringSet(seq_global_all_GISIAD_masked_rmdup, "../../data/seq_global_analysis/seq_global_all_rmdup.fasta")
 
-date_t <- sapply(names(seq_global_all_GISIAD_masked), function(x){
+date_t <- sapply(names(seq_global_all_GISIAD_masked_rmdup), function(x){
     strsplit(x, "|", fixed = T)[[1]][3]
 })
 df_date <- tibble(seq_name = names(date_t), date = date_t)
 write_tsv(df_date, "../../data/seq_global_analysis/date_global_all_rmdup.tsv", col_names = F)
-
 
