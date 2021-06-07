@@ -1,4 +1,4 @@
-# HK-SARS-CoV-2-genomic-epidemiology-**data**
+# HK-SARS-CoV-2-genomic-epidemiology-*data*
 
 ---
 This directory hosts the data for different analysis of the study. Specifically, The phylodynamics analysis, BDSS estimation and transmission bottleneck estimation. 

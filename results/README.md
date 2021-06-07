@@ -1,4 +1,4 @@
-# HK-SARS-CoV-2-genomic-epidemiology-**results**
+# HK-SARS-CoV-2-genomic-epidemiology-*results*
 
 ---
 
