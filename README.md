@@ -4,7 +4,7 @@
 Haogao Gu, Ruopeng Xie, Dillon C. Adam, Joseph L.-H. Tsui, Daniel K. Chu, Lydia D.J Chang, Sammi S.Y. Cheuk, Shreya Gurung, Pavithra Krishnan, Daisy Y.M. Ng, Gigi Y.Z. Liu, Carrie K.C. Wan, Kimberly M. Edwards, Kathy S.M. Leung, Joseph T.K. Wu, Dominic N.C. Tsang, Gabriel M. Leung, Benjamin J. Cowling, Malik J. S. Peiris, Tommy T.Y. Lam, Vijaykrishna Dhanasekaran, Leo L.M. Poon
 
 ---
-This repository contains data and codes for reproducing the analysis presented in *SARS-CoV-2 Under a Suppress and Release Strategy in Hong Kong*.
+This repository contains data and codes for reproducing the analysis presented in *SARS-CoV-2 Under an Elimination Strategy in Hong Kong*.
 
 The genomic sequences were not included in this repository according to GISAID [terms of use](https://www.gisaid.org/registration/terms-of-use/), instead, the GISIAD accession IDs of all consensus sequences used in this study were listed [here](./data/GISAID_accession_ID.csv). The primary epidemiological data of confirmed cases in Hong Kong are freely available via the [official webpage](https://data.gov.hk/en-data/dataset/hk-dh-chpsebcddr-novel-infectious-agent).
 
