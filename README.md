@@ -16,21 +16,18 @@ HK-SARS-CoV-2-sequencing-analysis/
 ├── data
 │   ├── Phylodynamics
 │   ├── BDSS
-│   ├── Phylogeography
 │   ├── Bottleneck_and_SNVs
 │   ├── misc
 │   └── README.md
 ├── scripts
 │   ├── Phylodynamics
 │   ├── BDSS
-│   ├── Phylogeography
 │   ├── Bottleneck_and_SNVs
 │   ├── misc
 │   └── README.md
 ├── results
 │   ├── Phylodynamics
 │   ├── BDSS
-│   ├── Phylogeography
 │   ├── Bottleneck_and_SNVs
 │   └── README.md
 └── README.md
