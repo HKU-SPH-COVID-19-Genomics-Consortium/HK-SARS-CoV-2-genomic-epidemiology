@@ -1,4 +1,4 @@
-# HK SARS-CoV-2 genomic epidemiology
+# SARS-CoV-2 Under an Elimination Strategy in Hong Kong
 
 
 Haogao Gu, Ruopeng Xie, Dillon C. Adam, Joseph L.-H. Tsui, Daniel K. Chu, Lydia D.J Chang, Sammi S.Y. Cheuk, Shreya Gurung, Pavithra Krishnan, Daisy Y.M. Ng, Gigi Y.Z. Liu, Carrie K.C. Wan, Kimberly M. Edwards, Kathy S.M. Leung, Joseph T.K. Wu, Dominic N.C. Tsang, Gabriel M. Leung, Benjamin J. Cowling, Malik J. S. Peiris, Tommy T.Y. Lam, Vijaykrishna Dhanasekaran, Leo L.M. Poon
