@@ -1,0 +1,1 @@
+The [script](./0.bottleneck_est.r) for estimating transmission bottleneck between transmission paris was originated from [link_1](https://github.com/koellelab/betabinomial_bottleneck) and [link_2](https://github.com/weissmanlab/BB_bottleneck) and were later modified to fit the current data.
