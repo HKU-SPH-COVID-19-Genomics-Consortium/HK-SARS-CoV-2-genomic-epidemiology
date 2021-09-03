@@ -129,14 +129,14 @@ data_ori$iSNVs <- sapply(seq_len(total_i), function(i){
     seq_t <- hk_seqs_1623[names(hk_seqs_1623) == sample_t]
     con_base_t <- subseq(seq_t, pos_t, pos_t)
     check <- con_base_t == data_ori$`Alt base`[i]
-    if(check){return("Major")}else{return("Minor")}
+    if(check){return("Major")}else{return("Minor")} # The Major variants refer to the SNVs that presented on the consensus sequences. 
 })
 
 write_csv(data_ori, "../../Bottleneck_and_SNVs/data_ori_all_variants_001.csv")
 data_ori <- data_ori %>% filter(as.numeric(Alle_freq) >= 0.03) # supported by reapeated samples 
 write_csv(data_ori, "../../Bottleneck_and_SNVs/data_ori_all_variants.csv")
 
-data_ori_minor <- data_ori %>% filter(as.numeric(Alle_freq) < 0.95)
-write_csv(data_ori_minor, "../../Bottleneck_and_SNVs/data_ori_minor_variants.csv")
+# data_ori_minor <- data_ori %>% filter(as.numeric(Alle_freq) < 0.95)
+# write_csv(data_ori_minor, "../../Bottleneck_and_SNVs/data_ori_minor_variants.csv")
 
 
