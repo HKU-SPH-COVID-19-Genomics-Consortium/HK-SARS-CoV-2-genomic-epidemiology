@@ -67,6 +67,83 @@ sample_should_have <- c(data_hk_study_samples$sample, data_duplicated_samples_ke
 data <- data_ori[data_ori$Sample %in% data_duplicated_samples_keep$Sample, ]
 quantile(data$depth, seq(0,1, 0.01))
 
+# samples from same patient
+table(data_duplicated_samples_keep$case_id)
+
+data_rep <- data_duplicated_samples_keep
+data_rep <- data_rep %>% group_by(case_id) %>% mutate(replicate = seq_along(Sample)) 
+data_rep$case_id <- as.character(data_rep$case_id)
+data_rep$Num_of_major_mutation_unique <- NA
+data_rep$Num_of_major_mutation_shared <- NA
+data_rep$Num_of_minor_mutation_unique <- NA
+data_rep$Num_of_minor_mutation_shared <- NA
+data_rep$minor_mutation_shared <- NA
+data_rep$minor_mutation_unique <- NA
+
+## overalapped mutation
+sapply(seq_len(nrow(data_rep)), function(i){
+	case_id_t <- data_rep$case_id[i]
+	sample_tmp <- data_rep$Sample[i]
+    df_tmp <- data_rep %>% filter(case_id == case_id_t)
+		
+	# data_filter <- data %>% filter(Alle_freq < 0.95)
+	data_filter <- data 
+	data_snvs_self <- data_filter %>% filter(Sample == sample_tmp)
+	data_snvs_tmp <- data_filter %>% filter(Sample %in% df_tmp$Sample)
+    data_snvs_tmp_major <- data_snvs_tmp %>% filter(iSNVs == "Major")
+    data_snvs_tmp_isnvs <- data_snvs_tmp %>% filter(iSNVs == "Minor")
+
+	mut_common_major <- (table(data_snvs_tmp_major$mutation) == nrow(df_tmp))
+	mut_common_major <- unique(names(mut_common_major)[mut_common_major])
+	mut_self_major <- (table(data_snvs_tmp_major$mutation) == 1)
+	mut_self_major <- unique(names(mut_self_major)[mut_self_major])
+    
+    mut_common_isnvs <- (table(data_snvs_tmp_isnvs$mutation) == nrow(df_tmp))
+	mut_common_isnvs <- unique(names(mut_common_isnvs)[mut_common_isnvs])
+	mut_self_isnvs <- (table(data_snvs_tmp_isnvs$mutation) == 1)
+	mut_self_isnvs <- unique(names(mut_self_isnvs)[mut_self_isnvs])
+
+	data_rep$Num_of_major_mutation_unique[i] <<- length(mut_self_major)
+    data_rep$Num_of_major_mutation_shared[i] <<- length(mut_common_major)
+    data_rep$Num_of_minor_mutation_unique[i] <<- length(mut_self_isnvs)
+    data_rep$Num_of_minor_mutation_shared[i] <<- length(mut_common_isnvs)
+    data_rep$minor_mutation_shared[i] <<- paste0(mut_common_isnvs[mut_common_isnvs %in% data_snvs_self$mutation], collapse = " ")
+    data_rep$minor_mutation_unique[i] <<- paste0(mut_self_isnvs[mut_self_isnvs%in% data_snvs_self$mutation], collapse = " ")
+})
+
+df_plot <- data_rep %>% pivot_longer(contains("Num_of"))
+df_plot$name[df_plot$name == "Num_of_major_mutation_shared"] <- "Shared major mutations" 
+df_plot$name[df_plot$name == "Num_of_minor_mutation_shared"] <- "Shared minor mutations" 
+df_plot$name[df_plot$name == "Num_of_major_mutation_unique"] <- paste0("Unique major mutation from sample ", df_plot$replicate[df_plot$name == "Num_of_major_mutation_unique"])
+df_plot$name[df_plot$name == "Num_of_minor_mutation_unique"] <- paste0("Unique minor mutation from sample ", df_plot$replicate[df_plot$name == "Num_of_minor_mutation_unique"])
+
+df_plot$same_sample_sim <- ifelse(df_plot$same_sample, "Same biological sample", "Different biological sample")
+df_plot$case_id[df_plot$diff_in_consensus!=0] <- paste0(df_plot$case_id[df_plot$diff_in_consensus!=0], "*")
+
+df_plot %>% ggplot()+
+	geom_col(aes(x = case_id, y = value, fill = name), position = "fill")+
+	scale_fill_jco(name = "Mutations")+
+	xlab("Case")+
+	ylab("Proportion")+
+	facet_wrap(vars(same_sample_sim), scales = "free", nrow = 2)+
+	NULL
+ggsave("../results/common_mutations_same_patient_003.pdf", height = 8, width = 10)
+
+df_plot$case_id_masked <- as.character(as.numeric(factor(df_plot$case_id)))
+df_plot %>% ggplot()+
+	geom_col(aes(x = case_id_masked, y = value, fill = name), position = "fill")+
+	scale_fill_jco(name = "Mutations")+
+	xlab("Case")+
+	ylab("Proportion")+
+	facet_wrap(vars(same_sample_sim), scales = "free", nrow = 2)+
+	NULL
+ggsave("../results/common_mutations_same_patient_003_name_masked.pdf", height = 8, width = 10)
+
+## analysis for reviewer's comments, 2021-10-26
+samples_15_16_9 <- unique(df_plot$Sample[df_plot$case_id_masked %in% c(15, 16, 9)])
+minor_snvs_unique <- unique(unlist(strsplit(data_rep$minor_mutation_unique[data_rep$Sample %in% samples_15_16_9], " ")))
+data_ori %>% filter(mutation %in% minor_snvs_unique) %>% group_by(mutation) %>% summarise(n=n(), samples=paste(Sample, collapse = " ")) %>% arrange(desc(n))
+
 ## overalapped mutation for transmission pairs
 data <- data_ori
 df_pair_day1 <- df_pair %>% filter(min_date_diff == 1)
@@ -98,11 +175,12 @@ df_pair_plot <- left_join(df_pair_day1, df_pair_plot)
 df_pair_plot$pair_sim <- gsub("Cluster_", "", df_pair_plot$pair)
 
 colors <- c("Shared major" = "#ca0020", "Shared minor" = "#0571b0", "Unique major" = "#f4a582", "Unique minor" = "#92c5de")
+df_pair_plot$pair_sim <- factor(df_pair_plot$pair_sim, levels = df_pair_plot$pair_sim[order(df_pair_plot$date_diff)])
 df_1 <- df_pair_plot %>% pivot_longer(contains("Shared") | contains("Unique")) %>% mutate(name = gsub(" SNVs", "", name)) %>% mutate(pair_sim = factor(pair_sim))
 (p1 <- df_1 %>% ggplot(aes(x = pair_sim, y = value))+
     geom_col(aes(fill = name), position = "fill", width = 0.618) +
     # scale_fill_uchicago(name = "Type")+
-    scale_fill_manual(name = "SNV type", values = colors, labels = c("Major (shared)", "Minor (shared)", "Major (unique)", "Minor (unique)"))+
+    scale_fill_manual(name = "SNV type", values = colors, labels = c("Shared Major", "Shared Minor", "Unique Major", "Unique Minor"))+
     xlab("Transmission pair")+
     ylab("Proportion")+
     scale_x_discrete(guide = guide_axis(n.dodge = 2), drop=F)+
@@ -115,12 +193,12 @@ df_pair_day1_full <- read_csv("../results/bottleneck_1day.csv")
 df_pair_day1_full <- df_pair_day1_full %>% filter(var_calling_threshold==0.03)
 df_pair_day1_full_plot <- df_pair_day1_full %>% arrange(pair) %>% left_join(df_pair_day1)
 
-df_pair_day1_full_plot$pair_sim <- factor(gsub("Cluster_", "", df_pair_day1_full_plot$pair), levels = levels(df_1$pair_sim))
+df_pair_day1_full_plot$pair_sim <- factor(gsub("Cluster_", "", df_pair_day1_full_plot$pair), levels = levels(df_pair_plot$pair_sim))
 
 colors <- c("1" = "#ffffcc", "2" = "#c7e9b4", "3" = "#7fcdbb", "4" = "#41b6c4", "5" = "#1d91c0", "7" = "#0c2c84")
 (p2 <- df_pair_day1_full_plot %>% ggplot(aes(x = pair_sim, y = bottleneck_size))+
     geom_errorbar(aes(ymin=CI_index_lower, ymax=CI_index_upper), color = "black", width = 0.2)+
-    geom_point(aes(fill = factor(date_diff)), size = 3, shape = 21, alpha = 0.9)+
+    geom_point(aes(fill = factor(date_diff)), size = 3, shape = 21, alpha = 0.8)+
     scale_x_discrete(guide = guide_axis(n.dodge = 2), drop=F)+
     scale_fill_manual(name = "Lag (days)", values = colors)+
     xlab("Transmission pair")+
@@ -315,10 +393,10 @@ df_jd_all$meta_minor_cluster_same_patient_sim_fct <- factor(df_jd_all$meta_minor
 colors_fill <- c("Major SNVs" = "#ca0020", "Minor SNVs" = "#0571b0")
 colors_col <- c("Major SNVs" = "#640112", "Minor SNVs" = "#054063")
 (p5_0 <- ggplot(df_jd_all)+
-    geom_violin(aes(x = meta_minor_cluster_same_patient_sim, y = jd_major, fill = "Major SNVs", color = "Major SNVs"), alpha = 0.8, position = position_nudge(x=-0.2), size = 0.3)+
-    geom_boxplot(aes(x = meta_minor_cluster_same_patient_sim, y = jd_major, fill = "Major SNVs", color = "Major SNVs"), outlier.shape = NA, alpha = 0.8, width=0.1, position = position_nudge(x=-0.2), size = 0.3) + 
-    geom_violin(aes(x = meta_minor_cluster_same_patient_sim, y = jd_minor, fill = "Minor SNVs", color = "Minor SNVs"), alpha = 0.8, position = position_nudge(x=0.2), size = 0.3)+
-    geom_boxplot(aes(x = meta_minor_cluster_same_patient_sim, y = jd_minor, fill = "Minor SNVs", color = "Minor SNVs"), outlier.shape = NA, alpha = 0.8, width=0.1, position = position_nudge(x=0.2), size = 0.3) + 
+    geom_violin(aes(x = meta_minor_cluster_same_patient_sim, y = jd_major, fill = "Major SNVs", color = "Major SNVs"), alpha = 0.4, position = position_nudge(x=-0.2), size = 0.3)+
+    geom_boxplot(aes(x = meta_minor_cluster_same_patient_sim, y = jd_major, fill = "Major SNVs", color = "Major SNVs"), outlier.shape = NA, width=0.1, position = position_nudge(x=-0.2), size = 0.3) + 
+    geom_violin(aes(x = meta_minor_cluster_same_patient_sim, y = jd_minor, fill = "Minor SNVs", color = "Minor SNVs"), alpha = 0.4, position = position_nudge(x=0.2), size = 0.3)+
+    geom_boxplot(aes(x = meta_minor_cluster_same_patient_sim, y = jd_minor, fill = "Minor SNVs", color = "Minor SNVs"), outlier.shape = NA, width=0.1, position = position_nudge(x=0.2), size = 0.3) + 
     scale_x_discrete(guide = guide_axis(n.dodge = 2))+
     ylab("Jaccard distance") + xlab("Sample pairs")+
     scale_fill_manual(name = "SNV type", values = colors_fill)+
@@ -341,10 +419,10 @@ sapply(tmp1, function(x){
     if(label_t == "0"){
         label_t <- "***"
     } else if(
-        as.numeric(label_t)<0.01){
-        label_t <- "**"
+        as.numeric(label_t)<0.001){
+        label_t <- "***"
     } else {
-        label_t <- "*"
+        label_t <- "**"
     }
     p5_2 <<- p5_2 +
         annotate("segment", 
@@ -372,10 +450,10 @@ sapply(tmp2, function(x){
     if(label_t == "0"){
         label_t <- "***"
     } else if(
-        as.numeric(label_t)<0.01){
-        label_t <- "**"
+        as.numeric(label_t)<0.001){
+        label_t <- "***"
     } else {
-        label_t <- "*"
+        label_t <- "**"
     }
     p5_2 <<- p5_2 +
         annotate("segment", 
